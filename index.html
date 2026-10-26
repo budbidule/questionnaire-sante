@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Questionnaire : chercher des articles de santé</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0F2A47">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F7F5F0; --surface:#FFFFFF; --fg:#0F2A47; --muted:#5B6878; --line:#D9D3C6;
+  --accent:#0B7A70; --accent-ink:#FFFFFF; --soft:#E6F4F1; --ok:#0B7A70; --err:#B3261E;
+  --display:'DM Serif Display',Georgia,serif;
+  --body:'DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0B1B2E; --surface:#12304F; --fg:#F2EFE8; --muted:#B4C3D6; --line:#2A4A6E;
+  --accent:#4FD1C0; --accent-ink:#062A26; --soft:#17375A; --ok:#4FD1C0; --err:#FF8A80; color-scheme:dark}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.45;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-top:max(24px,env(safe-area-inset-top,0px));padding-bottom:170px}
+.wrap{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:32px}
+header{display:flex;flex-direction:column;gap:10px}
+.eyebrow{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.dot{width:12px;height:12px;border-radius:50%;background:var(--accent)}
+h1{font-family:var(--display);font-size:clamp(34px,8vw,48px);line-height:1.05;margin:0;font-weight:400;text-wrap:balance}
+.lead{margin:0;color:var(--muted);max-width:60ch}
+section{display:flex;flex-direction:column;gap:22px;border-top:2px solid var(--line);padding-top:16px}
+section>h2{margin:0;font-family:var(--display);font-size:28px;line-height:1.1;font-weight:400;display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+section>h2 .cnt{font-family:var(--body);font-size:13px;font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+section>h2 .cnt.done{color:var(--ok)}
+fieldset{border:0;margin:0;padding:0;min-width:0;display:flex;flex-direction:column;gap:10px}
+legend{padding:0;font-weight:700;font-size:16px;margin-bottom:10px;text-wrap:balance}
+legend .hint{display:block;font-weight:600;font-size:12.5px;color:var(--muted);margin-top:2px}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.opt{position:relative;display:block;max-width:100%}
+.opt input{position:absolute;opacity:0;inset:0;width:100%;height:100%;margin:0;cursor:pointer}
+.opt span{display:flex;align-items:center;gap:10px;min-height:44px;padding:8px 14px;border-radius:10px;border:1.5px solid var(--line);background:var(--surface);font-weight:600}
+.opt span::before{content:"";flex:none;width:18px;height:18px;border:2px solid var(--muted)}
+.opt.one span::before{border-radius:50%}
+.opt.many span::before{border-radius:5px}
+.opt input:checked+span{background:var(--soft);border-color:var(--accent)}
+.opt input:checked+span::before{border-color:var(--accent);background:var(--accent) center/12px no-repeat;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 6.4l2.3 2.3 4.7-5' fill='none' stroke='white' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}
+.opt.one input:checked+span::before{background-image:radial-gradient(circle,var(--accent-ink) 0 3px,transparent 3.5px);background-size:auto}
+.opt input:focus-visible+span{outline:3px solid var(--accent);outline-offset:2px}
+textarea{width:100%;min-height:96px;padding:12px 14px;border-radius:10px;border:1.5px solid var(--line);background:var(--surface);color:var(--fg);font:inherit;resize:vertical}
+textarea:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1.5px solid var(--line);
+  padding:12px max(16px,env(safe-area-inset-right,0px)) calc(12px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.bar-in{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:8px}
+.row{display:flex;gap:12px;align-items:center;justify-content:space-between}
+.prog{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+.prog b{font-variant-numeric:tabular-nums;font-size:14px}
+.track{height:8px;border-radius:4px;background:var(--line);overflow:hidden}
+.fill{height:100%;width:0;background:var(--accent);transition:width .25s}
+.btn{min-height:48px;padding:0 22px;border-radius:10px;border:0;background:var(--accent);color:var(--accent-ink);font:inherit;font-weight:700;font-size:16px;cursor:pointer}
+.btn:disabled{background:var(--line);color:var(--muted);cursor:not-allowed}
+.status{font-size:13px;color:var(--muted);min-height:18px}
+.status.err{color:var(--err);font-weight:700}
+#thanks{display:none;flex-direction:column;gap:14px;padding-top:40px}
+#thanks.on{display:flex}
+#thanks .big{font-family:var(--display);font-size:clamp(44px,12vw,68px);line-height:1;font-weight:400}
+.link{background:none;border:0;padding:0;min-height:44px;color:var(--accent);font:inherit;font-weight:700;text-align:left;cursor:pointer}
+@media (prefers-reduced-motion:reduce){.fill{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap" id="page">
+  <header>
+    <div class="eyebrow"><span class="dot"></span>Projet de fin d'études · santé</div>
+    <h1>Comment cherches-tu des articles de santé ?</h1>
+    <p class="lead">Je prépare un projet de fin d'études Epitech : une application qui aide les étudiants en santé et les paramédicaux à trouver facilement des articles scientifiques fiables. 19 questions à cocher, environ 5 minutes. Les réponses sont anonymes : aucun nom ni contact n'est demandé.</p>
+  </header>
+  <main id="form" class="wrap" style="gap:32px"></main>
+</div>
+
+<div class="wrap" id="thanks" role="status">
+  <div class="eyebrow"><span class="dot"></span>Projet de fin d'études · santé</div>
+  <div class="big">Merci !</div>
+  <p class="lead">Tes réponses sont bien arrivées. Elles m'aident à construire un outil vraiment utile pour les étudiants et les soignants.</p>
+  <button class="link" id="again" type="button">Remplir une autre fiche</button>
+</div>
+
+<div class="bar" id="bar">
+  <div class="bar-in">
+    <div class="row">
+      <div class="prog"><b id="pcount">0 sur 19 questions</b><div class="track"><div class="fill" id="pfill"></div></div></div>
+      <button class="btn" id="send" type="button" disabled>Envoyer</button>
+    </div>
+    <div class="status" id="status" role="status" aria-live="polite"></div>
+  </div>
+</div>
+
+<script>
+/* À REMPLIR après la création du projet Supabase (voir GUIDE.md) */
+const SUPA_URL = 'COLLE_ICI_L_URL_DU_PROJET';
+const SUPA_KEY = 'COLLE_ICI_LA_CLE_PUBLIQUE';
+const TABLE = 'reponses_questionnaire';
+const DRAFT = 'questionnaire-sante-brouillon';
+
+/* col = nom de la colonne dans la table Supabase */
+const FONCTIONS = ["Alertes par thème","Niveau de preuve affiché","Résumé en français","« Ce que ça change pour la pratique »","Chatbot qui cite ses sources","Quiz pour s'entraîner","Dossiers partagés en équipe","Export de références (Zotero, mémoire)","Version web sur ordinateur"];
+const S = [
+ {t:"Ton profil", qs:[
+  {id:"profil", col:"profil", q:"Tu es :", k:"one", o:["Étudiant en santé","Soignant en poste","Cadre de santé","Autre"]},
+  {id:"metier", col:"metier", q:"Ton métier ou ta filière :", k:"one", o:["Infirmier(ère)","Kinésithérapeute","Diététicien(ne)","Manipulateur(trice) radio","Autre paramédical","Autre"]},
+  {id:"lieu", col:"lieu", q:"Où étudies-tu ou travailles-tu ?", k:"one", o:["Hôpital public","Clinique ou établissement privé","Libéral","Institut de formation ou université","Autre"]}
+ ]},
+ {t:"Comment tu cherches aujourd'hui", qs:[
+  {id:"frequence", col:"frequence", q:"À quelle fréquence cherches-tu un article ou une recommandation ?", k:"one", o:["Plusieurs fois par semaine","Environ une fois par semaine","Environ une fois par mois","Moins souvent","Jamais"]},
+  {id:"motif", col:"motifs", q:"Pour quelle occasion ?", k:"many", o:["Mémoire ou travail d'étude","Décision de soin","Protocole ou procédure de service","Veille, rester à jour","Formation continue"]},
+  {id:"outils", col:"outils", q:"Où cherches-tu ?", k:"many", o:["Google","PubMed","Google Scholar","Site de la HAS","Sociétés savantes ou sites spécialisés","Collègues ou formateurs","ChatGPT ou une autre IA","Je ne cherche pas"]},
+  {id:"temps", col:"temps_recherche", q:"Combien de temps te faut-il pour trouver une étude utile ?", k:"one", o:["Moins de 10 minutes","10 à 30 minutes","Plus de 30 minutes","Je n'y arrive pas"]},
+  {id:"difficultes", col:"difficultes", q:"Quelles sont tes principales difficultés ?", k:"many", o:["Sources éparpillées","Articles en anglais","Accès payant","Savoir si l'article est fiable","Manque de temps","Je ne sais pas bien chercher"]},
+  {id:"lecture", col:"formation_lecture_critique", q:"As-tu été formé à la lecture critique d'un article ?", k:"one", o:["Oui, une vraie formation","Un peu","Non"]},
+  {id:"appareil", col:"appareil", q:"Sur quel appareil cherches-tu ?", k:"many", o:["Téléphone","Ordinateur","Tablette"]}
+ ]},
+ {t:"Ce qui t'aiderait", qs:[
+  {id:"fonctions", col:"fonctions_interessantes", q:"Quelles fonctions t'intéresseraient ?", k:"many", o:FONCTIONS},
+  {id:"principale", col:"fonction_principale", q:"La plus importante pour toi :", k:"one", o:FONCTIONS},
+  {id:"alerte", col:"frequence_alerte", q:"À quelle fréquence veux-tu être prévenu des nouveaux articles de tes thèmes ?", k:"one", o:["Dès qu'un article paraît","Une fois par jour","Une fois par semaine","Je ne veux pas d'alerte"]},
+  {id:"chatbot", col:"confiance_chatbot", q:"Ferais-tu confiance à un chatbot santé ?", k:"one", o:["Seulement s'il cite ses sources","Oui, sans condition","Non, je préfère chercher moi-même","Je ne sais pas"]}
+ ]},
+ {t:"Le prix", qs:[
+  {id:"paiement", col:"paierait", q:"Paierais-tu pour une telle application ?", k:"one", o:["Non, gratuit seulement","Peut-être","Oui"]},
+  {id:"prix", col:"prix_mensuel", q:"Quel prix par mois te semblerait acceptable ?", k:"one", o:["Rien, gratuit seulement","Moins de 3 €","3 à 5 €","5 à 8 €","Plus de 8 €"]},
+  {id:"payeur", col:"payeur", q:"Qui devrait payer ?", k:"one", o:["Moi","Mon établissement","Mon université","Ça dépend"]},
+  {id:"bases", col:"acces_bases_payantes", q:"Ton établissement te donne-t-il accès à des bases payantes (UpToDate, Cochrane...) ?", k:"one", o:["Oui","Non","Je ne sais pas"]}
+ ]},
+ {t:"Pour finir", qs:[
+  {id:"test", col:"accepte_test", q:"Accepterais-tu de tester une première version ?", k:"one", o:["Oui","Peut-être","Non"]}
+ ]}
+];
+const ALL = S.flatMap(s => s.qs);
+const $ = id => document.getElementById(id);
+let answers = {}, note = '', sending = false;
+
+function loadDraft(){
+  try { const d = JSON.parse(localStorage.getItem(DRAFT) || 'null'); if (d) { answers = d.answers || {}; note = d.note || ''; } } catch (e) {}
+}
+function saveDraft(){ try { localStorage.setItem(DRAFT, JSON.stringify({answers, note})); } catch (e) {} }
+function clearDraft(){ try { localStorage.removeItem(DRAFT); } catch (e) {} }
+function status(t, err){ const s = $('status'); s.textContent = t; s.className = 'status' + (err ? ' err' : ''); }
+
+function buildForm(){
+  const root = $('form'); root.innerHTML = '';
+  S.forEach((s, si) => {
+    const sec = document.createElement('section');
+    const h = document.createElement('h2');
+    h.innerHTML = '<span></span><span class="cnt" id="cnt' + si + '"></span>';
+    h.firstChild.textContent = s.t; sec.appendChild(h);
+    s.qs.forEach(q => {
+      const fs = document.createElement('fieldset');
+      const lg = document.createElement('legend'); lg.textContent = q.q;
+      const hint = document.createElement('span'); hint.className = 'hint';
+      hint.textContent = q.k === 'many' ? 'Plusieurs réponses possibles' : 'Une seule réponse'; lg.appendChild(hint);
+      fs.appendChild(lg);
+      const box = document.createElement('div'); box.className = 'opts';
+      const chosen = answers[q.id] || [];
+      q.o.forEach((o, i) => {
+        const lab = document.createElement('label'); lab.className = 'opt ' + q.k;
+        const inp = document.createElement('input');
+        inp.type = q.k === 'many' ? 'checkbox' : 'radio'; inp.name = 'q-' + q.id; inp.id = 'q-' + q.id + '-' + i; inp.value = o;
+        inp.checked = chosen.indexOf(o) >= 0;
+        inp.addEventListener('change', () => onPick(q));
+        const sp = document.createElement('span'); sp.textContent = o;
+        lab.appendChild(inp); lab.appendChild(sp); box.appendChild(lab);
+      });
+      fs.appendChild(box); sec.appendChild(fs);
+    });
+    root.appendChild(sec);
+  });
+  const nsec = document.createElement('section');
+  nsec.innerHTML = '<h2><span>Une remarque ?</span></h2><label for="note" class="lead">Facultatif. Pas de nom ni de contact, merci.</label><textarea id="note" maxlength="1000"></textarea>';
+  root.appendChild(nsec);
+  $('note').value = note;
+  $('note').addEventListener('input', () => { note = $('note').value; saveDraft(); });
+  refresh();
+}
+
+function onPick(q){
+  const vals = Array.from(document.querySelectorAll('input[name="q-' + q.id + '"]:checked')).map(i => i.value);
+  if (vals.length) answers[q.id] = vals; else delete answers[q.id];
+  saveDraft(); refresh();
+  if (!sending) status('');
+}
+
+function refresh(){
+  const n = ALL.filter(q => answers[q.id] && answers[q.id].length).length;
+  $('pcount').textContent = n + ' sur ' + ALL.length + ' questions';
+  $('pfill').style.width = (100 * n / ALL.length) + '%';
+  $('send').disabled = sending || n === 0;
+  S.forEach((s, si) => {
+    const d = s.qs.filter(q => answers[q.id] && answers[q.id].length).length;
+    const c = $('cnt' + si); if (!c) return;
+    c.textContent = d + ' / ' + s.qs.length; c.className = 'cnt' + (d === s.qs.length ? ' done' : '');
+  });
+}
+
+async function send(){
+  if (sending) return;
+  if (SUPA_URL.indexOf('COLLE_ICI') === 0) { status('Le formulaire n\'est pas encore relié à Supabase.', true); return; }
+  const row = {};
+  ALL.forEach(q => {
+    const v = answers[q.id];
+    if (v && v.length) row[q.col] = q.k === 'many' ? v : v[0];
+  });
+  if (note.trim()) row.remarque = note.trim().slice(0, 1000);
+  sending = true; $('send').disabled = true; $('send').textContent = 'Envoi…'; status('Envoi en cours…');
+  try {
+    const r = await fetch(SUPA_URL + '/rest/v1/' + TABLE, {
+      method: 'POST',
+      headers: {'apikey': SUPA_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal'},
+      body: JSON.stringify(row)
+    });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    clearDraft(); answers = {}; note = '';
+    $('page').style.display = 'none'; $('bar').style.display = 'none';
+    $('thanks').classList.add('on'); window.scrollTo(0, 0);
+  } catch (e) {
+    status('L\'envoi a échoué. Vérifie ta connexion et réessaie : tes réponses sont conservées.', true);
+  } finally {
+    sending = false; $('send').textContent = 'Envoyer'; refresh();
+  }
+}
+
+$('send').addEventListener('click', send);
+$('again').addEventListener('click', () => {
+  $('thanks').classList.remove('on'); $('page').style.display = ''; $('bar').style.display = '';
+  buildForm(); status(''); window.scrollTo(0, 0);
+});
+loadDraft(); buildForm();
+</script>
+</body>
+</html>
