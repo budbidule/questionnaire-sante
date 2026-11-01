@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<title>Questionnaire : chercher des articles de santé</title>
+<title>Questionnaire : chercher des données probantes</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0F2A47">
 <meta name="robots" content="noindex">
@@ -20,6 +20,7 @@
   --bg:#0B1B2E; --surface:#12304F; --fg:#F2EFE8; --muted:#B4C3D6; --line:#2A4A6E;
   --accent:#4FD1C0; --accent-ink:#062A26; --soft:#17375A; --ok:#4FD1C0; --err:#FF8A80; color-scheme:dark}}
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 html,body{margin:0}
 body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.45;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
@@ -36,6 +37,7 @@ section>h2 .cnt{font-family:var(--body);font-size:13px;font-weight:700;color:var
 section>h2 .cnt.done{color:var(--ok)}
 fieldset{border:0;margin:0;padding:0;min-width:0;display:flex;flex-direction:column;gap:10px}
 legend{padding:0;font-weight:700;font-size:16px;margin-bottom:10px;text-wrap:balance}
+legend .num{display:inline-block;min-width:1.6em;color:var(--accent);font-family:var(--display);font-size:20px;margin-right:4px}
 legend .hint{display:block;font-weight:600;font-size:12.5px;color:var(--muted);margin-top:2px}
 .opts{display:flex;flex-wrap:wrap;gap:8px}
 .opt{position:relative;display:block;max-width:100%}
@@ -74,8 +76,11 @@ textarea:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 <div class="wrap" id="page">
   <header>
     <div class="eyebrow"><span class="dot"></span>Projet de fin d'études · santé</div>
-    <h1>Comment cherches-tu des articles de santé ?</h1>
-    <p class="lead">Je prépare un projet de fin d'études Epitech : une application qui aide les étudiants en santé et les paramédicaux à trouver facilement des articles scientifiques fiables. 18 questions à cocher, environ 5 minutes. Les réponses sont anonymes : aucun nom ni contact n'est demandé.</p>
+    <h1>Comment cherches-tu tes données probantes ?</h1>
+    <p class="lead">Tout a commencé sur les bancs d'un master santé, avec une frustration partagée : chercher des données probantes, c'est indispensable, mais les outils ne facilitent pas la tâche. Une application ? L'idée était là, les compétences pour la coder, beaucoup moins.</p>
+    <p class="lead">De son côté, un étudiant en Master of Science en Big Data et IA à Epitech cherchait un sujet pour son projet de fin d'études. Notre rencontre a tout lancé !</p>
+    <p class="lead">Ensemble, nous construisons une application qui aide les étudiants et les professionnels de santé à trouver facilement des articles scientifiques fiables. Vos réponses vont nous aider à la concevoir autour de vos vrais besoins. Il n'y a pas de bonne ou de mauvaise réponse.</p>
+    <p class="lead"><b>13 questions · environ 6 minutes · anonyme</b> (aucun nom ni contact demandé)</p>
   </header>
   <main id="form" class="wrap" style="gap:32px"></main>
 </div>
@@ -83,14 +88,14 @@ textarea:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 <div class="wrap" id="thanks" role="status">
   <div class="eyebrow"><span class="dot"></span>Projet de fin d'études · santé</div>
   <div class="big">Merci !</div>
-  <p class="lead">Tes réponses sont bien arrivées. Elles m'aident à construire un outil vraiment utile pour les étudiants et les soignants.</p>
+  <p class="lead">Tes réponses sont bien arrivées. Elles nous aident à construire un outil vraiment utile pour les étudiants et les soignants.</p>
   <button class="link" id="again" type="button">Remplir une autre fiche</button>
 </div>
 
 <div class="bar" id="bar">
   <div class="bar-in">
     <div class="row">
-      <div class="prog"><b id="pcount">0 sur 18 questions</b><div class="track"><div class="fill" id="pfill"></div></div></div>
+      <div class="prog"><b id="pcount">0 sur 13 questions</b><div class="track"><div class="fill" id="pfill"></div></div></div>
       <button class="btn" id="send" type="button" disabled>Envoyer</button>
     </div>
     <div class="status" id="status" role="status" aria-live="polite"></div>
@@ -98,45 +103,45 @@ textarea:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 </div>
 
 <script>
-/* À REMPLIR après la création du projet Supabase (voir GUIDE.md) */
 const SUPA_URL = 'https://dguwnurniticfuqcxcft.supabase.co';
 const SUPA_KEY = 'sb_publishable_6HIc01r1-mhv-DjtBhOHfw_0ybXBo7w';
 const TABLE = 'reponses_questionnaire';
-const DRAFT = 'questionnaire-sante-brouillon';
+const DRAFT = 'questionnaire-sante-brouillon-v6';
+const SKIP = ["Jamais","Je ne sais pas ce que c'est"];
 
-/* col = nom de la colonne dans la table Supabase */
-const SOUHAITS = ["Réunir plusieurs bases de données","Traduire des textes","Avoir un chatbot","Exporter des articles sur Zotero","Pouvoir commenter des articles","Discuter avec d'autres professionnels","Avoir des tutoriels sur la recherche d'articles"];
+/* col = nom de la colonne dans la table Supabase ; s3 = question passée si "jamais cherché" (Q3) */
 const S = [
  {t:"Ton profil", qs:[
-  {id:"profil", col:"profil", q:"Tu es :", k:"one", o:["Étudiant en santé","Soignant en poste","Cadre de santé","Autre"]},
-  {id:"metier", col:"metier", q:"Ton métier ou ta filière :", k:"one", o:["Infirmier(ère)","Kinésithérapeute","Diététicien(ne)","Manipulateur(trice) radio","Autre paramédical","Autre"]},
-  {id:"lieu", col:"lieu", q:"Où étudies-tu ou travailles-tu ?", k:"one", o:["Hôpital public","Clinique ou établissement privé","Libéral","Institut de formation ou université","Autre"]}
+  {id:"profil", col:"profil", q:"Tu es :", k:"one", o:["Étudiant(e) en santé","Soignant(e) en poste","Cadre de santé","Formateur(trice)","Cadre sup. / dir. des soins","Autre"]},
+  {id:"filiere", col:"filiere", q:"Ta filière :", k:"one", o:["Infirmier(ère)","Kinésithérapeute","Diététicien(ne)","Manipulateur(trice) radio","Sage-femme","Médecine","Autre paramédical","Autre"]},
+  {id:"exp", col:"experience_recherche", q:"As-tu déjà cherché des articles scientifiques ou des recommandations de bonnes pratiques ?", k:"one", hint:"Si tu choisis « Jamais » ou « Je ne sais pas ce que c'est », les questions 4 à 6 sont passées.", o:["Oui, régulièrement (1 fois par mois ou plus)","Oui, de temps en temps (quelques fois par an)","Jamais","Je ne sais pas ce que c'est"]}
  ]},
- {t:"Comment tu cherches aujourd'hui", qs:[
-  {id:"frequence", col:"frequence", q:"À quelle fréquence cherches-tu un article ou une recommandation ?", k:"one", o:["Plusieurs fois par semaine","Environ une fois par semaine","Environ une fois par mois","Moins souvent","Jamais"]},
-  {id:"motif", col:"motifs", q:"Pour quelle occasion ?", k:"many", o:["Mémoire ou travail d'étude","Décision de soin","Protocole ou procédure de service","Veille, rester à jour","Formation continue"]},
-  {id:"outils", col:"outils", q:"Où cherches-tu ?", k:"many", o:["Google","PubMed","Google Scholar","Site de la HAS","Sociétés savantes ou sites spécialisés","Collègues ou formateurs","ChatGPT ou une autre IA","Je ne cherche pas"]},
-  {id:"basesutil", col:"bases_utilisees", q:"Quelle base de données utilises-tu le plus souvent ?", k:"many", o:["PubMed","CINAHL","Embase","JBI","ScienceDirect","Cochrane","Autres"]},
-  {id:"temps", col:"temps_recherche", q:"Combien de temps te faut-il pour trouver une étude utile ?", k:"one", o:["Moins de 15 minutes","15 minutes à 1 heure","Plus d'1 heure","Autre"]},
-  {id:"difficultes", col:"difficultes", q:"Quelles sont tes principales difficultés ?", k:"many", o:["Sources éparpillées","Articles en anglais","Accès payant","Savoir si l'article est fiable","Manque de temps","Je ne sais pas bien chercher"]},
-  {id:"lecture", col:"formation_lecture_critique", q:"As-tu été formé à la lecture critique d'un article ?", k:"one", o:["Oui, une vraie formation","Un peu","Non"]},
-  {id:"appareil", col:"appareil", q:"Sur quel appareil cherches-tu ?", k:"many", o:["Téléphone","Ordinateur","Tablette"]}
+ {t:"Ta façon de chercher", qs:[
+  {id:"motifs", col:"motifs", s3:1, q:"Pour quoi cherches-tu ?", k:"many", o:["Mémoire, thèse, travail d'étude","Décision de soin","Protocole ou procédure","Veille, rester à jour","Formation continue","Autre"]},
+  {id:"outils", col:"outils", s3:1, q:"Où cherches-tu ?", k:"many", o:["PubMed","CINAHL","Embase","Cochrane","JBI","ScienceDirect","Google Scholar","HAS","IA (ChatGPT…)","Sociétés savantes (SFAR…)","Sites spécialisés, associations","Autre"]},
+  {id:"temps", col:"temps_recherche", s3:1, q:"Combien de temps te faut-il en général pour trouver une réponse à ta question ?", k:"one", o:["Moins de 15 minutes","15 minutes à 1 heure","Plus d'1 heure","Souvent, je ne trouve pas"]},
+  {id:"lecture", col:"formation_lecture_critique", q:"As-tu été formé(e) à la recherche ou à la lecture critique d'articles ?", k:"one", o:["Oui, lors d'une formation","Un peu, sur le terrain","Non"]},
+  {id:"difficultes", col:"difficultes", max:2, q:"Quelles sont tes 2 principales difficultés ?", k:"many", o:["Sources éparpillées","Articles en anglais","Accès payant","Savoir si un article est fiable","Manque de temps","Je ne sais pas bien chercher","Je ne sais pas quelle base choisir"]}
  ]},
  {t:"Ce qui t'aiderait", qs:[
-  {id:"souhaits", col:"fonctions_souhaitees", q:"Dans mon application, j'aimerais pouvoir :", k:"many", o:SOUHAITS},
-  {id:"avis", col:"avis_application", q:"Avoir une application qui recense les données probantes, c'est pour toi :", k:"one", o:["Un gain de temps inestimable","Inutile","Le nouvel Uber de la recherche","Pratique, simple, efficace"]},
-  {id:"alerte", col:"frequence_alerte", q:"À quelle fréquence veux-tu être prévenu des nouveaux articles de tes thèmes ?", k:"one", o:["Dès qu'un article paraît","Une fois par jour","Une fois par semaine","Je ne veux pas d'alerte"]},
-  {id:"chatbot", col:"confiance_chatbot", q:"Ferais-tu confiance à un chatbot santé ?", k:"one", o:["Seulement s'il cite ses sources","Oui, sans condition","Non, je préfère chercher moi-même","Je ne sais pas"]}
+  {id:"fonctions", col:"fonctions_utiles", q:"Dans une application, quelles seraient tes fonctions les plus utiles ?", k:"many", o:["Recherche unique multi-bases","Aide au choix de la bonne base","Filtre par niveau de preuve","Ressources en français","Alertes automatiques sur mes sujets","Résumé simple + qualité de l'article visible","Traduction instantanée des articles","Assistant conversationnel (chatbot)","Aide à la question (PICO)","Tutoriels de recherche","Favoris et historique","Export vers Zotero","Échanges entre professionnels","Autre"]},
+  {id:"appareil", col:"appareil", q:"Tu l'utiliserais surtout sur :", k:"one", o:["Téléphone","Ordinateur","Les deux"]}
  ]},
- {t:"Le prix", qs:[
-  {id:"prix", col:"prix_mensuel", q:"Quel prix par mois te semblerait acceptable ?", k:"one", o:["Rien, gratuit seulement","Moins de 3 €","3 à 5 €","5 à 8 €","Plus de 8 €"]},
-  {id:"payeur", col:"payeur", q:"Qui devrait payer ?", k:"one", o:["Moi","Mon établissement","Mon université","Ça dépend"]},
-  {id:"bases", col:"acces_bases_payantes", q:"Ton établissement te donne-t-il accès à des bases payantes (UpToDate, Cochrane...) ?", k:"one", o:["Oui","Non","Je ne sais pas"]}
+ {t:"Le prix et tes idées", qs:[
+  {id:"prix", col:"prix_mensuel", q:"Quel prix par mois te semblerait acceptable ?", k:"one", o:["Gratuit uniquement","Moins de 3 €","3 à 5 €","Plus de 5 €"]},
+  {id:"payeur", col:"payeur", q:"Qui devrait payer, selon toi ?", k:"one", o:["Moi","Mon établissement ou mon université","Ça dépend","Personne : ça doit rester gratuit"]}
  ]}
 ];
 const ALL = S.flatMap(s => s.qs);
+ALL.forEach((q, i) => q.n = i + 1);
+const NOTE_N = ALL.length + 1;      /* Q13 : remarque libre, facultative */
+const TOTAL = ALL.length + 1;
 const $ = id => document.getElementById(id);
 let answers = {}, note = '', sending = false;
+
+function skipping(){ return (answers.exp || []).some(v => SKIP.indexOf(v) >= 0); }
+function hidden(q){ return !!q.s3 && skipping(); }
+function isDone(q){ return !!(answers[q.id] && answers[q.id].length); }
 
 function loadDraft(){
   try { const d = JSON.parse(localStorage.getItem(DRAFT) || 'null'); if (d) { answers = d.answers || {}; note = d.note || ''; } } catch (e) {}
@@ -153,10 +158,12 @@ function buildForm(){
     h.innerHTML = '<span></span><span class="cnt" id="cnt' + si + '"></span>';
     h.firstChild.textContent = s.t; sec.appendChild(h);
     s.qs.forEach(q => {
-      const fs = document.createElement('fieldset');
-      const lg = document.createElement('legend'); lg.textContent = q.q;
+      const fs = document.createElement('fieldset'); fs.id = 'fs-' + q.id; fs.hidden = hidden(q);
+      const lg = document.createElement('legend');
+      const num = document.createElement('span'); num.className = 'num'; num.textContent = q.n; lg.appendChild(num);
+      lg.appendChild(document.createTextNode(q.q));
       const hint = document.createElement('span'); hint.className = 'hint';
-      hint.textContent = q.k === 'many' ? 'Plusieurs réponses possibles' : 'Une seule réponse'; lg.appendChild(hint);
+      hint.textContent = q.hint || (q.k === 'many' ? (q.max ? q.max + ' réponses maximum' : 'Plusieurs réponses possibles') : 'Une seule réponse'); lg.appendChild(hint);
       fs.appendChild(lg);
       const box = document.createElement('div'); box.className = 'opts';
       const chosen = answers[q.id] || [];
@@ -165,46 +172,61 @@ function buildForm(){
         const inp = document.createElement('input');
         inp.type = q.k === 'many' ? 'checkbox' : 'radio'; inp.name = 'q-' + q.id; inp.id = 'q-' + q.id + '-' + i; inp.value = o;
         inp.checked = chosen.indexOf(o) >= 0;
-        inp.addEventListener('change', () => onPick(q));
+        inp.addEventListener('change', () => onPick(q, inp));
         const sp = document.createElement('span'); sp.textContent = o;
         lab.appendChild(inp); lab.appendChild(sp); box.appendChild(lab);
       });
       fs.appendChild(box); sec.appendChild(fs);
     });
+    if (si === S.length - 1) {
+      const fs = document.createElement('fieldset');
+      fs.innerHTML = '<legend><span class="num">' + NOTE_N + '</span>Une idée, une remarque ?<span class="hint">Facultatif. Pas de nom ni de contact, merci.</span></legend><textarea id="note" maxlength="1000" aria-label="Une idée, une remarque ?"></textarea>';
+      sec.appendChild(fs);
+    }
     root.appendChild(sec);
   });
-  const nsec = document.createElement('section');
-  nsec.innerHTML = '<h2><span>Une remarque ?</span></h2><label for="note" class="lead">Facultatif. Pas de nom ni de contact, merci.</label><textarea id="note" maxlength="1000"></textarea>';
-  root.appendChild(nsec);
   $('note').value = note;
-  $('note').addEventListener('input', () => { note = $('note').value; saveDraft(); });
+  $('note').addEventListener('input', () => { note = $('note').value; saveDraft(); refresh(); });
   refresh();
 }
 
-function onPick(q){
-  const vals = Array.from(document.querySelectorAll('input[name="q-' + q.id + '"]:checked')).map(i => i.value);
+function onPick(q, inp){
+  let vals = Array.from(document.querySelectorAll('input[name="q-' + q.id + '"]:checked')).map(i => i.value);
+  if (q.max && vals.length > q.max) {
+    inp.checked = false; vals = vals.filter(v => v !== inp.value);
+    status('Tu peux choisir ' + q.max + ' réponses au maximum.', true);
+  } else if (!sending) status('');
   if (vals.length) answers[q.id] = vals; else delete answers[q.id];
+  if (q.id === 'exp') {
+    ALL.filter(x => x.s3).forEach(x => {
+      const fs = $('fs-' + x.id); fs.hidden = hidden(x);
+      if (hidden(x)) { delete answers[x.id]; fs.querySelectorAll('input').forEach(i => { i.checked = false; }); }
+    });
+  }
   saveDraft(); refresh();
-  if (!sending) status('');
 }
 
 function refresh(){
-  const n = ALL.filter(q => answers[q.id] && answers[q.id].length).length;
-  $('pcount').textContent = n + ' sur ' + ALL.length + ' questions';
-  $('pfill').style.width = (100 * n / ALL.length) + '%';
+  const vis = ALL.filter(q => !hidden(q));
+  const total = vis.length + 1;
+  const n = vis.filter(isDone).length + (note.trim() ? 1 : 0);
+  $('pcount').textContent = n + ' sur ' + total + ' questions';
+  $('pfill').style.width = (100 * n / total) + '%';
   $('send').disabled = sending || n === 0;
   S.forEach((s, si) => {
-    const d = s.qs.filter(q => answers[q.id] && answers[q.id].length).length;
+    const sv = s.qs.filter(q => !hidden(q));
+    let d = sv.filter(isDone).length, t = sv.length;
+    if (si === S.length - 1) { t += 1; if (note.trim()) d += 1; }
     const c = $('cnt' + si); if (!c) return;
-    c.textContent = d + ' / ' + s.qs.length; c.className = 'cnt' + (d === s.qs.length ? ' done' : '');
+    c.textContent = d + ' / ' + t; c.className = 'cnt' + (d === t ? ' done' : '');
   });
 }
 
 async function send(){
   if (sending) return;
-  if (SUPA_URL.indexOf('COLLE_ICI') === 0) { status('Le formulaire n\'est pas encore relié à Supabase.', true); return; }
   const row = {};
   ALL.forEach(q => {
+    if (hidden(q)) return;
     const v = answers[q.id];
     if (v && v.length) row[q.col] = q.k === 'many' ? v : v[0];
   });
